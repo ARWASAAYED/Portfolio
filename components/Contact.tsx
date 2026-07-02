@@ -21,6 +21,10 @@ export default function Contact() {
   const [copied, setCopied] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
 
+  const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+  const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+  const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
   const copyEmail = () => {
     navigator.clipboard.writeText("arwaahmed2553@gmail.com");
     setCopied(true);
@@ -36,20 +40,31 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.message) return;
+
     setStatus("sending");
+
     try {
-      // Replace these with your actual EmailJS credentials
-      await emailjs.sendForm(
-        "YOUR_SERVICE_ID",
-        "YOUR_TEMPLATE_ID",
-        formRef.current!,
-        "YOUR_PUBLIC_KEY",
-      );
+      if (serviceId && templateId && publicKey) {
+        await emailjs.sendForm(
+          serviceId,
+          templateId,
+          formRef.current!,
+          publicKey,
+        );
+      } else {
+        const subject = encodeURIComponent(`New message from ${form.name}`);
+        const body = encodeURIComponent(
+          `Name: ${form.name}\nEmail: ${form.email}\n\nMessage:\n${form.message}`,
+        );
+        window.location.href = `mailto:arwaahmed2553@gmail.com?subject=${subject}&body=${body}`;
+      }
+
       setStatus("success");
       setForm({ name: "", email: "", message: "" });
     } catch {
       setStatus("error");
     }
+
     setTimeout(() => setStatus("idle"), 4000);
   };
 
